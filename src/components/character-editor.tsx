@@ -17,7 +17,7 @@ import { CharacterPresetTemplate, RawPreset } from "@/types/preset";
 import { GetNestedType, NestedKeyOf } from "@/types/util";
 import { cn, updateNestedObject } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { Download } from "lucide-react";
+import { Download, Loader2 } from "lucide-react";
 import { CharacterBasic } from "./character-basic";
 import { CharacterDetails } from "./character-details";
 
@@ -29,6 +29,7 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
     const preset = usePreset(presetId);
 
     const [activeTab, setActiveTab] = useState("basic");
+    const [isExporting, setIsExporting] = useState(false);
     const tabRefs = useRef<Record<string, React.RefObject<HTMLButtonElement>>>({
         basic: createRef<HTMLButtonElement>(),
         messages: createRef<HTMLButtonElement>(),
@@ -85,16 +86,28 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => {
-                                exportPreset(preset);
+                            disabled={isExporting}
+                            onClick={async () => {
+                                setIsExporting(true);
+                                try {
+                                    await exportPreset(preset);
+                                } catch (e) {
+                                    console.error("Export failed:", e);
+                                } finally {
+                                    setIsExporting(false);
+                                }
                             }}
                             className="h-8 w-8 p-0"
                         >
-                            <Download
-                                className={cn(
-                                    "h-4 w-4 transition-transform duration-200"
-                                )}
-                            />
+                            {isExporting ? (
+                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                            ) : (
+                                <Download
+                                    className={cn(
+                                        "h-4 w-4 transition-transform duration-200"
+                                    )}
+                                />
+                            )}
                         </Button>
                     </div>
                 </div>
