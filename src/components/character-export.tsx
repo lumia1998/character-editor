@@ -6,6 +6,7 @@ import { PresetModel } from "@/hooks/use-preset";
 import { CharacterPresetTemplate } from "@/types/preset";
 import { Play, Terminal, FileText } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { load, dump } from "js-yaml";
 
 interface CharacterExportProps {
     preset: PresetModel;
@@ -347,6 +348,30 @@ ${mdContent}
         }
 
         finalYaml = finalYaml.trim();
+
+        // 强力脱敏过滤：确保导出的 YAML 中绝对没有任何 api_url, api_token 和 model 属性
+        try {
+            const parsed = load(finalYaml) as any;
+            if (parsed && typeof parsed === "object") {
+                delete parsed.api_url;
+                delete parsed.api_token;
+                delete parsed.model;
+                finalYaml = dump(parsed, { lineWidth: -1 });
+                addLog("♻️ 预设过滤：已在客户端对导出的预设执行了 100% 格式纯净化脱敏过滤。", "success");
+            }
+        } catch (yamlErr) {
+            console.warn("YAML parsing/scrubbing failed, using regex fallback", yamlErr);
+            // 备用正则行过滤器：防止 AI 输出的格式问题导致 js-yaml 解析错误而降级下载
+            finalYaml = finalYaml
+                .split("\n")
+                .filter(line => {
+                    const trimmed = line.trim();
+                    return !trimmed.startsWith("api_url:") && 
+                           !trimmed.startsWith("api_token:") && 
+                           !trimmed.startsWith("model:");
+                })
+                .join("\n");
+        }
 
         if (!finalYaml.includes("name:") && !finalYaml.includes("input:")) {
             addLog("⚠️ 警告：AI 生成的内容似乎没有包含合法的 YAML 属性。请检查模型的回复质量或更换更强大的模型。", "warning");
