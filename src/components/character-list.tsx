@@ -23,8 +23,6 @@ import {
 import { useEffect, useState } from "react";
 import {
   deletePreset,
-  exportPreset,
-  getPreset,
   PresetModel,
 } from "@/hooks/use-preset";
 import { Link, useNavigate } from "react-router";
@@ -192,18 +190,7 @@ export function CharacterList({
                   >
                     编辑
                   </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={async () => {
-                      const preset = await getPreset(character.id);
-                      if (!preset) return;
-                      exportPreset(preset);
-                    }}
-                  >
-                    导出
-                  </Button>
+
                   <Button
                     variant="ghost"
                     size="sm"
