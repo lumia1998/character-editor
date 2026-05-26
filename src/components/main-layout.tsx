@@ -3,7 +3,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
-    Users,
     FolderOpen,
     Menu,
     ChevronRight,
@@ -31,7 +30,6 @@ export function MainLayout({ children }: MainLayoutProps) {
 
             <div className="flex flex-col flex-1 overflow-auto px-2 gap-y-2">
                 <NavItem href="/" icon={FolderOpen} label="项目" />
-                <NavItem href="/square" icon={Users} label="广场" />
 
                 {recentPresets.length > 0 && (
                     <div className="py-2">

@@ -1,13 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { CharacterPresetTemplate } from "@/types/preset";
 import { GetNestedType, NestedKeyOf } from "@/types/util";
-import { Button } from "./ui/button";
-import { ChevronDown } from "lucide-react";
-import { useState } from "react";
-import { cn } from "@/lib/utils";
+import { useState, useEffect, useRef } from "react";
 
 interface CharacterBasicFormProps {
     updatePreset?: <K extends NestedKeyOf<CharacterPresetTemplate>>(
@@ -15,132 +11,125 @@ interface CharacterBasicFormProps {
         value: GetNestedType<CharacterPresetTemplate, K>
     ) => void;
     preset: CharacterPresetTemplate;
+    presetId: string;
 }
 
 export function CharacterBasic({
     updatePreset,
     preset,
+    presetId,
 }: CharacterBasicFormProps) {
-    const [openSections, setOpenSections] = useState({
-        basic: true,
-        other: false,
-        postHandler: false,
-        knowledge: false,
-    });
+    // 1. Synchronous local states
+    const [name, setName] = useState(preset.name || "");
+    const [nickName, setNickName] = useState(preset.nick_name?.join(", ") || "");
+    const [botId, setBotId] = useState(preset.bot_id || "");
+    const [ownerId, setOwnerId] = useState(preset.owner_id || "");
 
-    const toggleSection = (section: keyof typeof openSections) => {
-        setOpenSections((prev) => ({
-            ...prev,
-            [section]: !prev[section],
-        }));
+    // 2. Ref to keep track of debounce timeouts
+    const saveTimeouts = useRef<Record<string, NodeJS.Timeout>>({});
+
+    // 3. Reset local states ONLY when presetId changes (switching characters)
+    useEffect(() => {
+        setName(preset.name || "");
+        setNickName(preset.nick_name?.join(", ") || "");
+        setBotId(preset.bot_id || "");
+        setOwnerId(preset.owner_id || "");
+
+        // Clear timeouts on switch
+        Object.values(saveTimeouts.current).forEach(clearTimeout);
+        saveTimeouts.current = {};
+    }, [presetId]);
+
+    // 4. Synchronous state update and debounced DB write helper
+    const handleFieldChange = (
+        key: NestedKeyOf<CharacterPresetTemplate>,
+        value: string,
+        setter: (val: string) => void,
+        formatValue?: (val: string) => any
+    ) => {
+        // Sync state instantly
+        setter(value);
+
+        // Cancel previous timer
+        if (saveTimeouts.current[key]) {
+            clearTimeout(saveTimeouts.current[key]);
+        }
+
+        // Set timer to write to DB
+        saveTimeouts.current[key] = setTimeout(() => {
+            const formatted = formatValue ? formatValue(value) : value;
+            updatePreset?.(key, formatted);
+        }, 400);
     };
+
+    // Clean up timeouts on unmount
+    useEffect(() => {
+        return () => {
+            Object.values(saveTimeouts.current).forEach(clearTimeout);
+        };
+    }, []);
 
     return (
         <div className="grid gap-6">
             <Card className="rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between p-6">
-                    <CardTitle>基本信息</CardTitle>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => toggleSection("basic")}
-                        className="h-8 w-8 p-0"
-                    >
-                        <ChevronDown
-                            className={cn(
-                                "h-4 w-4 transition-transform duration-200",
-                                openSections.basic ? "rotate-180" : ""
-                            )}
-                        />
-                    </Button>
+                <CardHeader className="p-6">
+                    <CardTitle>基础信息</CardTitle>
                 </CardHeader>
-                <div
-                    className={cn(
-                        "grid transition-[grid-template-rows] duration-200",
-                        openSections.basic
-                            ? "grid-rows-[1fr]"
-                            : "grid-rows-[0fr]"
-                    )}
-                >
-                    <div className="overflow-hidden">
-                        <CardContent className="space-y-4 p-6 pt-0">
-                            <div className="grid gap-4 md:grid-cols-2">
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">预设名称</Label>
-                                    <Input
-                                        id="name"
-                                        type="string"
-                                        value={preset.name}
-                                        placeholder="预设名称"
-                                        onChange={(e) => {
-
-                                            updatePreset?.(
-                                                "name",
-                                                e.target.value
-                                            );
-                                        }}
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="type">触发昵称，使用逗号分割</Label>
-                                    <Input
-                                        id="type"
-                                        type="string"
-                                        value={preset.nick_name.join(", ")}
-                                        placeholder="触发的昵称"
-                                        className="rounded-lg"
-                                        onChange={(e) =>
-                                            updatePreset?.(
-                                                "nick_name",
-                                                e.target.value.split(",").map((s) => s.trim())
-                                            )
-                                        }
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="mute">禁言词，使用逗号分割</Label>
-                                    <Input
-                                        id="mute"
-                                        type="string"
-                                        value={preset.mute_keyword?.join(", ") || []}
-                                        placeholder="触发的昵称"
-                                        className="rounded-lg"
-                                        onChange={(e) =>
-                                            updatePreset?.(
-                                                "mute_keyword",
-                                                e.target.value.split(",").map((s) => s.trim())
-                                            )
-                                        }
-                                    />
-                                </div>
-                               
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="description">
-                                    状态信息
-                                </Label>
-                                <Textarea
-                                    id="description"
-                                    placeholder="人物的状态模版信息"
-                                    className="min-h-[100px] rounded-lg"
-                                    rows={20}
-                                    value={preset.status}
-                                    onChange={(e) =>
-                                        updatePreset?.(
-                                            "status",
-                                            e.target.value
-                                        )
-                                    }
-                                />
-                            </div>
-                        </CardContent>
+                <CardContent className="space-y-4 p-6 pt-0">
+                    <div className="grid gap-4 md:grid-cols-2">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">bot名字</Label>
+                            <Input
+                                id="name"
+                                type="text"
+                                value={name}
+                                placeholder="请输入bot名字"
+                                onChange={(e) => handleFieldChange("name", e.target.value, setName)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="nick_name">bot昵称 (用英文逗号 , 分割)</Label>
+                            <Input
+                                id="nick_name"
+                                type="text"
+                                value={nickName}
+                                placeholder="请输入bot昵称，例如：小助手, 煕煕"
+                                className="rounded-lg"
+                                onChange={(e) =>
+                                    handleFieldChange(
+                                        "nick_name",
+                                        e.target.value,
+                                        setNickName,
+                                        (val) => val.split(",").map((s) => s.trim())
+                                    )
+                                }
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="bot_id">botid (QQ号)</Label>
+                            <Input
+                                id="bot_id"
+                                type="text"
+                                value={botId}
+                                placeholder="请输入bot的QQ号"
+                                className="rounded-lg"
+                                onChange={(e) => handleFieldChange("bot_id", e.target.value, setBotId)}
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="owner_id">主人id (QQ号)</Label>
+                            <Input
+                                id="owner_id"
+                                type="text"
+                                value={ownerId}
+                                placeholder="请输入主人的QQ号"
+                                className="rounded-lg"
+                                onChange={(e) => handleFieldChange("owner_id", e.target.value, setOwnerId)}
+                            />
+                        </div>
                     </div>
-                </div>
+                </CardContent>
             </Card>
-
-
-
-
         </div>
     );
 }

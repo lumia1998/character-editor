@@ -17,11 +17,9 @@ import { CharacterPresetTemplate, RawPreset } from "@/types/preset";
 import { GetNestedType, NestedKeyOf } from "@/types/util";
 import { cn, updateNestedObject } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { Download, Upload } from "lucide-react";
+import { Download } from "lucide-react";
 import { CharacterBasic } from "./character-basic";
-import { CharacterSystem } from "./character-system";
-import { CharacterInput } from "./character-input";
-import { UploadPresetDialog } from "./upload-preset-dialog";
+import { CharacterDetails } from "./character-details";
 
 interface CharacterEditorProps {
     presetId: string;
@@ -31,7 +29,6 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
     const preset = usePreset(presetId);
 
     const [activeTab, setActiveTab] = useState("basic");
-    const [uploadOpen, setUploadOpen] = useState(false);
     const tabRefs = useRef<Record<string, React.RefObject<HTMLButtonElement>>>({
         basic: createRef<HTMLButtonElement>(),
         messages: createRef<HTMLButtonElement>(),
@@ -39,6 +36,7 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
         author_note: createRef<HTMLButtonElement>(),
         system: createRef<HTMLButtonElement>(),
         input: createRef<HTMLButtonElement>(),
+        details: createRef<HTMLButtonElement>(),
     })
 
     if (!preset) {
@@ -87,18 +85,6 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                         <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => setUploadOpen(true)}
-                            className="h-8 w-8 p-0"
-                        >
-                            <Upload
-                                className={cn(
-                                    "h-4 w-4 transition-transform duration-200"
-                                )}
-                            />
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="icon"
                             onClick={() => {
                                 exportPreset(preset);
                             }}
@@ -114,7 +100,7 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                 </div>
             </div>
             <div className="flex-1 overflow-auto">
-                <div className="container py-6 max-w-4xl mx-auto">
+                <div className="container py-6 max-w-7xl mx-auto">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeTab}
@@ -183,11 +169,12 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                                         )
                                     }
                                     preset={preset.preset as CharacterPresetTemplate}
+                                    presetId={preset.id}
                                 />
                             )}
 
-                            {(activeTab === "system" && preset.type === 'character') && (
-                                <CharacterSystem
+                            {(activeTab === "details" && preset.type === 'character') && (
+                                <CharacterDetails
                                     updatePreset={(key, value) =>
                                         updatePreset<CharacterPresetTemplate>(
                                             key,
@@ -196,30 +183,14 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                                         )
                                     }
                                     preset={preset.preset as CharacterPresetTemplate}
-                                />
-                            )}
-
-                            {(activeTab === "input" && preset.type === 'character') && (
-                                <CharacterInput
-                                    updatePreset={(key, value) =>
-                                        updatePreset<CharacterPresetTemplate>(
-                                            key,
-                                            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                                            value as any
-                                        )
-                                    }
-                                    preset={preset.preset as CharacterPresetTemplate}
+                                    presetId={preset.id}
                                 />
                             )}
                         </motion.div>
                     </AnimatePresence>
                 </div>
             </div>
-            <UploadPresetDialog
-                preset={preset}
-                open={uploadOpen}
-                onOpenChange={setUploadOpen}
-            />
+
         </div>
     );
 }
@@ -309,13 +280,14 @@ function CharacterPresetTabs({ tabRefs }: { tabRefs: Record<string, React.RefObj
                 exit="exit"
                 transition={{ duration: 0.2 }}
             >
+
                 <TabsTrigger
                     value="basic"
                     className="relative px-3 py-1.5 text-sm font-medium transition-all z-10 data-[state=active]:bg-[transparent]"
 
                     ref={tabRefs.basic}
                 >
-                    基本配置
+                    基础信息
                 </TabsTrigger>
             </motion.div>
 
@@ -328,29 +300,12 @@ function CharacterPresetTabs({ tabRefs }: { tabRefs: Record<string, React.RefObj
             >
                 <TabsTrigger
                     className="relative px-3 py-1.5 text-sm font-medium transition-all z-10 data-[state=active]:bg-[transparent]"
-                    ref={tabRefs.system}
-                    value="system"
+                    ref={tabRefs.details}
+                    value="details"
                 >
-                    系统提示词
+                    详情设定
                 </TabsTrigger>
             </motion.div>
-
-            <motion.div
-                variants={tabTriggerVariants}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-                transition={{ duration: 0.2 }}
-            >
-                <TabsTrigger
-                    value="input"
-                    className="relative px-3 py-1.5 text-sm font-medium transition-all z-10 data-[state=active]:bg-[transparent]"
-                    ref={tabRefs.input}
-                >
-                    格式化输入提示词
-                </TabsTrigger>
-            </motion.div>
-
         </>
     );
 }

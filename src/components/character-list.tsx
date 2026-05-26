@@ -9,13 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, ArrowUp, MoreVerticalIcon } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ArrowUpDown, ArrowUp } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,7 +28,7 @@ import {
   PresetModel,
 } from "@/hooks/use-preset";
 import { Link, useNavigate } from "react-router";
-import { UploadPresetDialog } from "@/components/upload-preset-dialog";
+
 
 interface CharacterListProps {
   presets: PresetModel[];
@@ -54,8 +48,7 @@ export function CharacterList({
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
     null,
   );
-  const [uploadPreset, setUploadPreset] = useState<PresetModel | null>(null);
-  const [uploadOpen, setUploadOpen] = useState(false);
+
   const navigate = useNavigate();
 
   const sortCharacters = (key: SortKey) => {
@@ -163,7 +156,7 @@ export function CharacterList({
                 )}
               </Button>
             </TableHead>
-            <TableHead className="w-[100px]">操作</TableHead>
+            <TableHead className="w-[200px] text-center">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -187,52 +180,41 @@ export function CharacterList({
                   {new Date(character.lastModified).toLocaleString()}
                 </span>
               </TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVerticalIcon className="h-4 w-4" />
-                        <span className="sr-only">更多操作</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          navigate(`/character/${character.id}`);
-                        }}
-                      >
-                        编辑
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={async () => {
-                          const preset = await getPreset(character.id);
-                          // TODO: toast error
-                          if (!preset) return;
-                          exportPreset(preset);
-                        }}
-                      >
-                        导出
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setUploadPreset(character);
-                          setUploadOpen(true);
-                        }}
-                      >
-                        上传
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedCharacterId(character.id);
-                          setOpenAlert(true);
-                        }}
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                      >
-                        删除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+              <TableCell className="w-[200px] text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => {
+                      navigate(`/character/${character.id}`);
+                    }}
+                  >
+                    编辑
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={async () => {
+                      const preset = await getPreset(character.id);
+                      if (!preset) return;
+                      exportPreset(preset);
+                    }}
+                  >
+                    导出
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    onClick={() => {
+                      setSelectedCharacterId(character.id);
+                      setOpenAlert(true);
+                    }}
+                  >
+                    删除
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -267,18 +249,7 @@ export function CharacterList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {uploadPreset && (
-        <UploadPresetDialog
-          preset={uploadPreset}
-          open={uploadOpen}
-          onOpenChange={(nextOpen) => {
-            setUploadOpen(nextOpen);
-            if (!nextOpen) {
-              setUploadPreset(null);
-            }
-          }}
-        />
-      )}
+
     </div>
   );
 }
