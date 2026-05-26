@@ -276,6 +276,119 @@ export function getPreset(id: string) {
   return db.presets.get(id);
 }
 
+export function compilePresetForExport(preset: PresetModel, modelConfig: { apiUrl: string; token: string; selectedModel: string } | null) {
+  if (preset.type !== "character") {
+    return preset.preset;
+  }
+
+  const p = preset.preset as CharacterPresetTemplate;
+
+  // Assemble system prompt based on user's exact structure
+  const systemPrompt = `你现在正在QQ群聊中和群友聊天，你是一个普通的群友。你的网名是${p.name}，请根据以下信息进行角色扮演：
+
+个人信息 {{
+    网名：${p.name}
+    群id: ${p.bot_id || ""}
+    主人id: ${p.owner_id || ""}
+}}
+
+角色描述 {{
+    ${p.description || ""}
+}}
+
+性格 {{
+    ${p.personality || ""}
+}}
+
+爱好 {{
+    ${p.hobbies || ""}
+}}
+
+对话示例 {{
+    ${p.dialogue_examples || ""}
+}}
+
+聊天风格 {{
+    ${p.chat_style || ""}
+}}
+
+聊天行为 {{
+    ${p.chat_behavior || ""}
+}}
+
+人际关系 {{
+    ${p.relationship || ""}
+}}
+
+表情包 {{
+    ${p.stickers || ""}
+}}`;
+
+  // Assemble input prompt
+  const inputPrompt = ` 当前时间：{time}
+请基于以下指示生成回复：
+
+1. 严格遵循角色设定进行扮演
+2. 综合分析上下文，结合角色知识和状态生成独特回复
+3. 表情包类型(sticker)：仅限使用 {stickers}
+
+消息历史（重点关注最后一条）：
+{{
+    最近消息：
+    {history_new}
+
+    最后消息：
+    {history_last}
+}}
+
+{{?search 如果有搜索结果，请参考以下实时数据：
+
+<Internet>
+{{search}}
+</Internet>
+
+注意事项：
+1. 这些是最新的实时数据，优先于你已有的知识
+2. 保持自然对话，不要生硬地重复数据
+3. 根据对话场景选择性使用这些信息
+4. 保持你的个性和说话风格
+5. 可以灵活运用但不要篡改原始数据}}
+
+当前状态（影响回复风格和思考方式）：
+{{
+    {status}
+}}
+
+请按以下格式输出：
+
+<status>
+// 更新后的状态
+</status>
+
+<think>
+// 角色视角的思考过程
+</think>
+
+<message_part>
+ <message name='${p.name}' id='0' type='text' sticker='表情包类型'>回复内容（40字内）</message>
+</message_part>`;
+
+  // Return the compiled YAML structure
+  return {
+    name: p.name,
+    nick_name: p.nick_name,
+    mute_keyword: p.mute_keyword || [],
+    status: p.status || `好感度: '10'\n心情: "开心"\n状态: "正在和群友探讨人生"\n记忆: "dingyi: 好厉害的群友，懂得那么多哲学道理"\n动作: "拿起手机聊天"`,
+    system: systemPrompt,
+    input: inputPrompt,
+    bot_id: p.bot_id || "",
+    owner_id: p.owner_id || "",
+    api_url: modelConfig?.apiUrl || "",
+    api_token: modelConfig?.token || "",
+    model: modelConfig?.selectedModel || "",
+  };
+}
+
 export const exportPreset = (preset: PresetModel) => {
   const blob = new Blob([makeYaml(preset)], {
     type: "application/yaml;charset=utf-8",
@@ -324,7 +437,17 @@ export async function importPreset(
 }
 
 export function makeYaml(preset: PresetModel) {
-  return dump(preset.preset, { lineWidth: -1 });
+  let modelConfig = null;
+  try {
+    const saved = localStorage.getItem("chatluna_model_config");
+    if (saved) {
+      modelConfig = JSON.parse(saved);
+    }
+  } catch (e) {
+    console.error("Failed to load model config", e);
+  }
+  const compiled = compilePresetForExport(preset, modelConfig);
+  return dump(compiled, { lineWidth: -1 });
 }
 
 export interface UploadPresetOptions {

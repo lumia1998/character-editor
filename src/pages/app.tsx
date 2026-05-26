@@ -4,6 +4,7 @@ import { MainLayout } from "@/components/main-layout";
 import { CharacterList } from "@/components/character-list";
 import { usePresets } from "@/hooks/use-preset";
 import { NewPresetDialog } from "@/components/new-preset-dialog";
+import { ModelConfigDialog } from "@/components/model-config-dialog";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 
@@ -26,6 +27,7 @@ export default function Page() {
                         />
                         <div className="flex gap-2">
                             <NewPresetDialog />
+                            <ModelConfigDialog />
                         </div>
                     </div>
                 </div>
