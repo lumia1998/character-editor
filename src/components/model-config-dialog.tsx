@@ -57,10 +57,28 @@ export function ModelConfigDialog() {
                 formattedUrl = formattedUrl.slice(0, -1);
             }
             
-            const url = `${formattedUrl}/models`;
-            const headers: Record<string, string> = {};
-            if (token.trim()) {
-                headers["Authorization"] = `Bearer ${token.trim()}`;
+            let url = `${formattedUrl}/models`;
+            const headers: Record<string, string> = {
+                "Accept": "application/json"
+            };
+
+            const trimmedToken = token.trim();
+            if (trimmedToken) {
+                // OpenAI compatible format (standard)
+                headers["Authorization"] = `Bearer ${trimmedToken}`;
+                
+                // Anthropic compatible format
+                headers["x-api-key"] = trimmedToken;
+                headers["anthropic-version"] = "2023-06-01";
+                
+                // Gemini compatible header format
+                headers["x-goog-api-key"] = trimmedToken;
+
+                // Gemini compatible query parameter format (if google/googleapis in URL)
+                if (formattedUrl.includes("googleapis.com") || formattedUrl.includes("google")) {
+                    const separator = url.includes("?") ? "&" : "?";
+                    url = `${url}${separator}key=${encodeURIComponent(trimmedToken)}`;
+                }
             }
 
             const res = await fetch(url, { headers });
