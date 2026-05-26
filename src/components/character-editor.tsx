@@ -17,9 +17,10 @@ import { CharacterPresetTemplate, RawPreset } from "@/types/preset";
 import { GetNestedType, NestedKeyOf } from "@/types/util";
 import { cn, updateNestedObject } from "@/lib/utils";
 import { Button } from "./ui/button";
-import { Download, Loader2 } from "lucide-react";
+import { Download } from "lucide-react";
 import { CharacterBasic } from "./character-basic";
 import { CharacterDetails } from "./character-details";
+import { CharacterExport } from "./character-export";
 
 interface CharacterEditorProps {
     presetId: string;
@@ -29,7 +30,6 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
     const preset = usePreset(presetId);
 
     const [activeTab, setActiveTab] = useState("basic");
-    const [isExporting, setIsExporting] = useState(false);
     const tabRefs = useRef<Record<string, React.RefObject<HTMLButtonElement>>>({
         basic: createRef<HTMLButtonElement>(),
         messages: createRef<HTMLButtonElement>(),
@@ -38,6 +38,7 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
         system: createRef<HTMLButtonElement>(),
         input: createRef<HTMLButtonElement>(),
         details: createRef<HTMLButtonElement>(),
+        export: createRef<HTMLButtonElement>(),
     })
 
     if (!preset) {
@@ -82,34 +83,24 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                         </TabsList>
                     </Tabs>
 
-                    <div className="flex items-center gap-1">
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            disabled={isExporting}
-                            onClick={async () => {
-                                setIsExporting(true);
-                                try {
-                                    await exportPreset(preset);
-                                } catch (e) {
-                                    console.error("Export failed:", e);
-                                } finally {
-                                    setIsExporting(false);
-                                }
-                            }}
-                            className="h-8 w-8 p-0"
-                        >
-                            {isExporting ? (
-                                <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                            ) : (
+                    {preset.type === "main" && (
+                        <div className="flex items-center gap-1">
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => {
+                                    exportPreset(preset);
+                                }}
+                                className="h-8 w-8 p-0"
+                            >
                                 <Download
                                     className={cn(
                                         "h-4 w-4 transition-transform duration-200"
                                     )}
                                 />
-                            )}
-                        </Button>
-                    </div>
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="flex-1 overflow-auto">
@@ -198,6 +189,10 @@ export function CharacterEditor({ presetId }: CharacterEditorProps) {
                                     preset={preset.preset as CharacterPresetTemplate}
                                     presetId={preset.id}
                                 />
+                            )}
+
+                            {(activeTab === "export" && preset.type === 'character') && (
+                                <CharacterExport preset={preset} />
                             )}
                         </motion.div>
                     </AnimatePresence>
@@ -317,6 +312,22 @@ function CharacterPresetTabs({ tabRefs }: { tabRefs: Record<string, React.RefObj
                     value="details"
                 >
                     详情设定
+                </TabsTrigger>
+            </motion.div>
+
+            <motion.div
+                variants={tabTriggerVariants}
+                initial="hidden"
+                animate="visible"
+                exit="exit"
+                transition={{ duration: 0.2 }}
+            >
+                <TabsTrigger
+                    className="relative px-3 py-1.5 text-sm font-medium transition-all z-10 data-[state=active]:bg-[transparent]"
+                    ref={tabRefs.export}
+                    value="export"
+                >
+                    导出预设
                 </TabsTrigger>
             </motion.div>
         </>
