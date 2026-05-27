@@ -1,17 +1,14 @@
 # ChatLuna 预设编辑器
 
-在线，专为 ChatLuna 设计的预设编辑器。
+在线，专为 ChatLuna character设计的预设编辑器。
 
 ## Roadmap
-
-- [x] 预设编辑器
-- [x] 预设管理
 - [x] 伪装预设编辑器
 - [x] 预设广场
 
 ## Usage
 
-前往 [https://preset.chatluna.chat](https://preset.chatluna.chat) 体验。
+前往 [lumia1998.github.io/character-editor) 体验。
 
 
 ## LICENSE
