@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "./ui/switch";
 import {
     isWorldLoreConfig,
@@ -21,8 +22,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
-import { TemplateEditor } from "./template-editor";
+import { TooltipContent, TooltipProvider, TooltipTrigger } from "./ui/tooltip";
+import { Tooltip } from "@radix-ui/react-tooltip";
 
 interface CharacterWorldLoreProps {
     updatePreset?: <K extends NestedKeyOf<RawPreset>>(
@@ -78,8 +79,8 @@ export function CharacterWorldLore({
             firstKeyword instanceof RegExp ? firstKeyword.source : firstKeyword;
 
         return (
-            <Card key={index} className="mx-4 mb-4 gap-4 py-4">
-                <CardHeader className="flex flex-row items-center justify-between px-4">
+            <Card key={index} className="mb-4 px-2 mx-4">
+                <CardHeader className="flex flex-row items-center justify-between p-4">
                     <CardTitle className="text-lg">
                         {title || "未命名条目"}
                     </CardTitle>
@@ -92,7 +93,7 @@ export function CharacterWorldLore({
                         <Trash2 className="h-4 w-4 text-destructive" />
                     </Button>
                 </CardHeader>
-                <CardContent className="space-y-4 px-4">
+                <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label>触发关键词</Label>
                         <div className="space-y-2 mt-4">
@@ -179,23 +180,18 @@ export function CharacterWorldLore({
                     </div>
 
                     <div className="space-y-2">
-                        <Label htmlFor={`world-lore-content-${index}`}>
-                            条目内容
-                        </Label>
-                        <TemplateEditor
-                            id={`world-lore-content-${index}`}
+                        <Label>条目内容</Label>
+                        <Textarea
                             className="mt-4"
                             placeholder="输入内容"
                             value={lore.content}
-                            context="world-lore"
-                            minRows={6}
-                            ariaLabel={`世界书条目 ${index + 1} 内容`}
-                            onChange={(value) => {
+                            onChange={(e) => {
                                 updatePreset?.(
                                     `world_lores.${index}.content`,
-                                    value
+                                    e.target.value.toString()
                                 );
                             }}
+                            rows={6}
                         />
                     </div>
 

@@ -3,66 +3,35 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 import {
-    Users,
     FolderOpen,
     Menu,
     ChevronRight,
-    PanelLeftClose,
-    PanelLeftOpen,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { SettingsDialog } from "./settings-dialog";
 import { useRecentPresets } from "@/hooks/use-preset";
-import { useSidebar } from "@/hooks/use-sidebar";
-import { Toaster } from "./ui/sonner";
-import { Link, Outlet, useLocation, useNavigate } from 'react-router';
-import { getRememberedCharacterPath } from "@/lib/editor-route";
+import { Toaster } from "./ui/toaster";
+import { Link, useLocation } from 'react-router';
 
-function Sidebar({
-    recentPresets,
-    collapsed = false,
-    onToggle,
-}: {
-    recentPresets: ReturnType<typeof useRecentPresets>;
-    collapsed?: boolean;
-    onToggle?: () => void;
-}) {
-    return (
+interface MainLayoutProps {
+    children: React.ReactNode;
+}
+
+export function MainLayout({ children }: MainLayoutProps) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const recentPresets = useRecentPresets();
+
+    const Sidebar = () => (
         <div className="flex flex-col h-full">
-            <div
-                className={cn(
-                    "flex h-16 shrink-0 items-center gap-2 px-4",
-                    collapsed ? "justify-center px-2" : "justify-between"
-                )}
-            >
-                <span className={cn("truncate font-medium", collapsed && "sr-only")}>
-                    ChatLuna 预设站
-                </span>
-                {onToggle && (
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="size-9 shrink-0"
-                        aria-label={collapsed ? "展开侧边栏" : "收起侧边栏"}
-                        title={collapsed ? "展开侧边栏" : "收起侧边栏"}
-                        onClick={onToggle}
-                    >
-                        {collapsed ? (
-                            <PanelLeftOpen className="size-5" />
-                        ) : (
-                            <PanelLeftClose className="size-5" />
-                        )}
-                    </Button>
-                )}
+            <div className="flex h-16 items-center px-4">
+                ChatLuna 预设编辑器
             </div>
 
             <div className="flex flex-col flex-1 overflow-auto px-2 gap-y-2">
-                <NavItem href="/" icon={FolderOpen} label="项目" compact={collapsed} />
-                <NavItem href="/square" icon={Users} label="广场" compact={collapsed} />
+                <NavItem href="/" icon={FolderOpen} label="项目" />
 
-                {!collapsed && recentPresets.length > 0 && (
+                {recentPresets.length > 0 && (
                     <div className="py-2">
                         <div className="px-2 py-2">
                             <h2 className="text-sm font-medium text-muted-foreground">
@@ -73,12 +42,7 @@ function Sidebar({
                             {recentPresets.map((preset) => (
                                 <NavItem
                                     key={preset.id}
-                                    href={() =>
-                                        getRememberedCharacterPath(
-                                            preset.id,
-                                            preset.type,
-                                        )
-                                    }
+                                    href={`/character/${preset.id}`}
                                     label={preset.name}
                                 />
                             ))}
@@ -93,30 +57,15 @@ function Sidebar({
                 )}
             </div>
 
-            <SettingsDialog compact={collapsed} />
+            <SettingsDialog />
         </div>
     );
-}
-
-export function MainLayout() {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const { isCollapsed: isSidebarCollapsed, toggle: toggleSidebar } = useSidebar();
-    const recentPresets = useRecentPresets();
 
     return (
         <div className="flex h-screen bg-background">
             {/* Desktop Sidebar */}
-            <div
-                className={cn(
-                    "hidden h-screen shrink-0 border-r bg-card/50 transition-[width] duration-300 ease-in-out md:block",
-                    isSidebarCollapsed ? "w-16" : "w-64"
-                )}
-            >
-                <Sidebar
-                    recentPresets={recentPresets}
-                    collapsed={isSidebarCollapsed}
-                    onToggle={toggleSidebar}
-                />
+            <div className="hidden md:block md:w-64 border-r bg-card/50 h-screen">
+                <Sidebar />
             </div>
 
             {/* Mobile Sidebar */}
@@ -131,18 +80,15 @@ export function MainLayout() {
                     </Button>
                 </SheetTrigger>
                 <SheetContent side="left" className="w-64 p-0">
-                    <Sidebar recentPresets={recentPresets} />
+                    <Sidebar />
                 </SheetContent>
             </Sheet>
 
             {/* Main Content */}
-            <div
-                className="flex-1 w-full h-screen scroll-smooth overflow-auto"
-                data-main-scroll-container
-            >
+            <div className="flex-1 w-full h-screen overflow-auto">
                 <div className="md:hidden h-16 border-b" />{" "}
                 {/* Mobile header spacing */}
-                <Outlet />
+                {children}
             </div>
             <Toaster />
         </div>
@@ -152,51 +98,25 @@ export function MainLayout() {
 interface NavItemProps {
     icon?: React.ComponentType<{ className?: string }>;
     label: string;
-    href: string | (() => string);
-    compact?: boolean;
+    href: string;
 }
 
-function NavItem({ icon: Icon, label, href, compact = false }: NavItemProps) {
+function NavItem({ icon: Icon, label, href }: NavItemProps) {
     const { pathname } = useLocation();
-    const navigate = useNavigate();
-    const resolvedHref = typeof href === "function" ? href() : href;
   
-    const isActive =
-        pathname === resolvedHref || pathname.startsWith(`${resolvedHref}/`);
-
-    const handleClick = (event: React.MouseEvent<HTMLAnchorElement>) => {
-        if (typeof href !== "function") return;
-        if (
-            event.button !== 0 ||
-            event.metaKey ||
-            event.ctrlKey ||
-            event.shiftKey ||
-            event.altKey
-        ) {
-            return;
-        }
-
-        event.preventDefault();
-        navigate(href());
-    };
+    const isActive = pathname === href || pathname.startsWith(`${href}/`);
 
     return (
-        <Link
-            to={resolvedHref}
-            title={compact ? label : undefined}
-            onClick={handleClick}
-        >
+        <Link to={href}>
             <Button
                 variant="ghost"
-                aria-label={compact ? label : undefined}
                 className={cn(
                     "w-full justify-start gap-3 px-4 mt-0 h-10 rounded-lg",
-                    compact && "justify-center gap-0 px-0",
                     isActive && "bg-primary/10 text-primary hover:bg-primary/20"
                 )}
             >
-                {Icon && <Icon className="size-5 shrink-0" />}
-                <span className={cn(compact && "sr-only")}>{label}</span>
+                {Icon && <Icon className="h-5 w-5" />}
+                <span>{label}</span>
             </Button>
         </Link>
     );

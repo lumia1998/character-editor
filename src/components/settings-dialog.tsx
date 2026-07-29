@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
-    Bot,
     Computer,
     Database,
     Moon,
@@ -40,7 +39,6 @@ import {
 import { Separator } from "./ui/separator";
 import { useTheme } from "@/hooks/use-theme";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { AIModelSettings } from "@/components/ai/ai-model-settings";
 
 interface SettingsCategoryProps {
     title: string;
@@ -50,11 +48,10 @@ interface SettingsCategoryProps {
 
 const settingsCategories: SettingsCategoryProps[] = [
     { title: "通用", icon: <Settings className="h-4 w-4" />, value: "general" },
-    { title: "AI 模型", icon: <Bot className="h-4 w-4" />, value: "ai-model" },
     { title: "数据管理", icon: <Database className="h-4 w-4" />, value: "data" },
 ];
 
-export function SettingsDialog({ compact = false }: { compact?: boolean }) {
+export function SettingsDialog() {
     const { theme, setTheme } = useTheme();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [selectedCategory, setSelectedCategory] = useState(settingsCategories[0].value);
@@ -136,13 +133,6 @@ export function SettingsDialog({ compact = false }: { compact?: boolean }) {
                 </div>
             );
             break;
-        case "ai-model":
-            categoryContent = (
-                <div className="ml-1 h-full min-h-0">
-                    <AIModelSettings />
-                </div>
-            );
-            break;
         case "data":
             categoryContent = (
                 <div className="grid gap-4 ml-3">
@@ -215,22 +205,15 @@ export function SettingsDialog({ compact = false }: { compact?: boolean }) {
             <DialogTrigger asChild>
                 <Button
                     variant="ghost"
-                    aria-label={compact ? "设置" : undefined}
-                    title={compact ? "设置" : undefined}
-                    className={cn(
-                        "w-full justify-start gap-3 px-4 h-11 rounded-t-lg rounded-b-none border-t hover:bg-primary/5",
-                        compact && "justify-center gap-0 px-0"
-                    )}
+                    className="w-full justify-start gap-3 px-4 h-11 rounded-t-lg rounded-b-none border-t hover:bg-primary/5"
                 >
-                    <Settings className="size-5 shrink-0" />
-                    <span className={cn(compact && "sr-only")}>设置</span>
+                    <Settings className="h-5 w-5" />
+                    <span>设置</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className={cn(
-                "w-[calc(100%-2rem)] max-w-none rounded-2xl sm:max-w-[800px]",
-                isMobile
-                    ? "max-h-[calc(100vh-2rem)] overflow-y-auto"
-                    : "max-h-[calc(100vh-2rem)] overflow-hidden"
+                "rounded-2xl",
+                isMobile ? "max-w-[90vw]" : "max-w-[400px] sm:max-w-[800px]"
             )}>
                 <DialogHeader>
                     <DialogTitle>设置</DialogTitle>
@@ -253,12 +236,12 @@ export function SettingsDialog({ compact = false }: { compact?: boolean }) {
                                 </Button>
                             ))}
                         </div>
-                        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+                        <div className="flex-1 p-4">
                             {categoryContent}
                         </div>
                     </div>
                 ) : (
-                    <div className="flex h-[min(60vh,32rem)] min-h-0">
+                    <div className="flex h-[400px]">
                         <div className="w-[200px] border-r flex flex-col pr-6">
                             {settingsCategories.map((category) => (
                                 <Button
@@ -275,16 +258,16 @@ export function SettingsDialog({ compact = false }: { compact?: boolean }) {
                                 </Button>
                             ))}
                         </div>
-                        <div className="flex-1 min-h-0 overflow-y-auto p-4">
+                        <div className="flex-1 p-4">
                             {categoryContent}
                         </div>
                     </div>
                 )}
                 <div className="border-t pt-4 mt-4 flex items-center justify-between">
                     <div className="text-xs text-muted-foreground">
-                        ChatLuna 预设站 v0.1.0 by dingyi
+                        ChatLuna Preset Editor v0.1.0 by dingyi
                         <br />
-                        <a className='text-primary' target="_blank" rel="noreferrer" href='https://github.com/ChatLunaLab/preset-editor'>Open Source Address</a>
+                        <a className='text-primary' target="_blink" href='https://github.com/ChatLunaLab/preset-editor'>Open Source Address</a>
                     </div>
                 </div>
             </DialogContent>

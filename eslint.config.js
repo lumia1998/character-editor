@@ -21,24 +21,8 @@ export default tseslint.config(
       ...reactHooks.configs.recommended.rules,
       'react-refresh/only-export-components': [
         'warn',
-        {
-          allowConstantExport: true,
-          allowExportNames: [
-            'badgeVariants',
-            'buttonGroupVariants',
-            'buttonVariants',
-            'CHARACTER_PRESET_FORMATS',
-            'MAIN_PRESET_FORMATS',
-            'tabsListVariants',
-          ],
-        },
+        { allowConstantExport: true },
       ],
-    },
-  },
-  {
-    files: ['src/components/ai-elements/**/*.{ts,tsx}'],
-    rules: {
-      'react-refresh/only-export-components': 'off',
     },
   },
 )

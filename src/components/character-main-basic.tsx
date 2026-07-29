@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "./ui/switch";
 import { RawPreset } from "@/types/preset";
 import { GetNestedType, NestedKeyOf } from "@/types/util";
@@ -8,7 +9,6 @@ import { Button } from "./ui/button";
 import { ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { TemplateEditor } from "./template-editor";
 
 interface CharacterBasicFormProps {
     updatePreset?: <K extends NestedKeyOf<RawPreset>>(
@@ -38,8 +38,8 @@ export function CharacterMainBasic({
 
     return (
         <div className="grid gap-6">
-            <Card className="gap-0 rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-xl">
+                <CardHeader className="flex flex-row items-center justify-between p-6">
                     <CardTitle>基本信息</CardTitle>
                     <Button
                         variant="ghost"
@@ -64,7 +64,7 @@ export function CharacterMainBasic({
                     )}
                 >
                     <div className="overflow-hidden">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4 p-6 pt-0">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">预设名称</Label>
@@ -101,20 +101,19 @@ export function CharacterMainBasic({
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="format-user-prompt">
+                                <Label htmlFor="description">
                                     用户格式化输入
                                 </Label>
-                                <TemplateEditor
-                                    id="format-user-prompt"
+                                <Textarea
+                                    id="description"
                                     placeholder="用户的格式化输入"
-                                    context="format-user"
-                                    minRows={5}
-                                    ariaLabel="用户格式化输入"
+                                    className="min-h-[100px] rounded-lg"
+                                    rows={5}
                                     value={preset.format_user_prompt}
-                                    onChange={(value) =>
+                                    onChange={(e) =>
                                         updatePreset?.(
                                             "format_user_prompt",
-                                            value
+                                            e.target.value
                                         )
                                     }
                                 />
@@ -124,8 +123,8 @@ export function CharacterMainBasic({
                 </div>
             </Card>
 
-            <Card className="gap-0 rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-xl">
+                <CardHeader className="flex flex-row items-center justify-between p-6">
                     <CardTitle>后处理器 （Post Handler） 配置</CardTitle>
                     <Button
                         variant="ghost"
@@ -150,7 +149,7 @@ export function CharacterMainBasic({
                     )}
                 >
                     <div className="overflow-hidden">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4 p-6 pt-0">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="prefix">
@@ -213,8 +212,8 @@ export function CharacterMainBasic({
                 </div>
             </Card>
 
-            <Card className="gap-0 rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-xl">
+                <CardHeader className="flex flex-row items-center justify-between p-6">
                     <CardTitle>知识库配置</CardTitle>
                     <Button
                         variant="ghost"
@@ -239,7 +238,7 @@ export function CharacterMainBasic({
                     )}
                 >
                     <div className="overflow-hidden">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4 p-6 pt-0">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="name">
@@ -272,20 +271,19 @@ export function CharacterMainBasic({
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="knowledge-prompt">
+                                <Label htmlFor="description">
                                     知识库检索预设
                                 </Label>
-                                <TemplateEditor
-                                    id="knowledge-prompt"
+                                <Textarea
+                                    rows={5}
+                                    id="description"
                                     placeholder="知识库的预设"
-                                    context="knowledge"
-                                    minRows={5}
-                                    ariaLabel="知识库检索预设"
+                                    className="min-h-[100px] rounded-lg"
                                     value={preset.knowledge?.prompt}
-                                    onChange={(value) =>
+                                    onChange={(e) =>
                                         updatePreset?.(
                                             "knowledge.prompt",
-                                            value
+                                            e.target.value
                                         )
                                     }
                                 />
@@ -295,8 +293,8 @@ export function CharacterMainBasic({
                 </div>
             </Card>
 
-            <Card className="gap-0 rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-xl">
+                <CardHeader className="flex flex-row items-center justify-between p-6">
                     <CardTitle>其他配置</CardTitle>
                     <Button
                         variant="ghost"
@@ -321,43 +319,43 @@ export function CharacterMainBasic({
                     )}
                 >
                     <div className="overflow-hidden">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4 p-6 pt-0">
                             <div className="grid gap-4 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label htmlFor="long_memory_prompt">
                                         长期记忆检索 Prompt
                                     </Label>
-                                    <TemplateEditor
+                                    <Textarea
                                         id="long_memory_prompt"
-                                        context="memory"
-                                        minRows={5}
-                                        ariaLabel="长期记忆检索 Prompt"
+
+                                        rows={5}
+                                        className="rounded-lg"
                                         value={preset.config?.longMemoryPrompt}
-                                        onChange={(value) =>
+                                        onChange={(e) =>
                                             updatePreset?.(
                                                 "config.longMemoryPrompt",
-                                                value
+                                                e.target.value
                                             )
                                         }
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="long_memory_new_question_prompt">
+                                    <Label htmlFor="height">
                                         长期记忆新问题 Prompt
                                     </Label>
-                                    <TemplateEditor
-                                        id="long_memory_new_question_prompt"
-                                        context="memory"
-                                        minRows={5}
-                                        ariaLabel="长期记忆新问题 Prompt"
+                                    <Textarea
+                                        id="height"
+
+                                        rows={5}
+                                        className="rounded-lg"
                                         value={
                                             preset.config
                                                 ?.longMemoryNewQuestionPrompt
                                         }
-                                        onChange={(value) =>
+                                        onChange={(e) =>
                                             updatePreset?.(
                                                 "config.longMemoryNewQuestionPrompt",
-                                                value
+                                                e.target.value
                                             )
                                         }
                                     />
@@ -366,39 +364,38 @@ export function CharacterMainBasic({
                                     <Label htmlFor="long_term_memory_extraction_prompt">
                                         长期记忆提取 Prompt
                                     </Label>
-                                    <TemplateEditor
+                                    <Textarea
                                         id="long_term_memory_extraction_prompt"
-                                        context="memory"
-                                        minRows={5}
-                                        ariaLabel="长期记忆提取 Prompt"
+
+                                        rows={5}
                                         value={
                                             preset.config
                                                 ?.longMemoryExtractPrompt
                                         }
-                                        onChange={(value) =>
+                                        className="rounded-lg"
+                                        onChange={(e) =>
                                             updatePreset?.(
                                                 "config.longMemoryExtractPrompt",
-                                                value
+                                                e.target.value
                                             )
                                         }
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="lore_books_prompt">
+                                <Label htmlFor="appearance">
                                     世界书检索 Prompt
                                 </Label>
-                                <TemplateEditor
-                                    id="lore_books_prompt"
+                                <Textarea
+                                    id="appearance"
+                                    rows={5}
                                     placeholder="世界书检索 Prompt"
-                                    context="memory"
-                                    minRows={5}
-                                    ariaLabel="世界书检索 Prompt"
                                     value={preset.config?.loreBooksPrompt}
-                                    onChange={(value) =>
+                                    className="min-h-[100px] rounded-lg"
+                                    onChange={(e) =>
                                         updatePreset?.(
                                             "config.loreBooksPrompt",
-                                            value
+                                            e.target.value
                                         )
                                     }
                                 />

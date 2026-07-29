@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { RawPreset } from "@/types/preset";
 import { GetNestedType, NestedKeyOf } from "@/types/util";
 import { Button } from "./ui/button";
@@ -14,7 +15,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
-import { TemplateEditor } from "./template-editor";
 
 interface CharacterAuthorNoteProps {
     updatePreset?: <K extends NestedKeyOf<RawPreset>>(
@@ -43,8 +43,8 @@ export function CharacterAuthorNote({
 
     return (
         <div className="grid gap-6 sm:grid-cols-1">
-            <Card className="gap-0 rounded-xl">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card className="rounded-xl">
+                <CardHeader className="flex flex-row items-center justify-between p-6">
                     <CardTitle>作者注释</CardTitle>
                     <Button
                         variant="ghost"
@@ -69,20 +69,19 @@ export function CharacterAuthorNote({
                     )}
                 >
                     <div className="overflow-hidden">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4 p-6 pt-0">
                             <div className="space-y-2">
-                                <Label htmlFor="authors-note-content">注释内容</Label>
-                                <TemplateEditor
-                                    id="authors-note-content"
+                                <Label htmlFor="description">注释内容</Label>
+                                <Textarea
+                                    id="description"
                                     placeholder="注释的内容"
-                                    context="author-note"
-                                    minRows={5}
-                                    ariaLabel="作者注释内容"
+                                    className="min-h-[100px] rounded-lg"
+                                    rows={5}
                                     value={preset.authors_note?.content || ""}
-                                    onChange={(value) =>
+                                    onChange={(e) =>
                                         updatePreset?.(
                                             "authors_note.content",
-                                            value
+                                            e.target.value
                                         )
                                     }
                                 />

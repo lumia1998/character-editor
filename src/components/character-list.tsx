@@ -9,13 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, ArrowUp, MoreVerticalIcon } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { ArrowUpDown, ArrowUp } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,16 +20,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useMemo, useState } from "react";
-import type { PresetModel } from "@/lib/database";
-import { deletePreset, getPreset } from "@/lib/preset-store";
-import { exportPreset } from "@/lib/preset-io";
-import { Link, useNavigate } from "react-router";
-import { UploadPresetDialog } from "@/components/upload-preset-dialog";
+import { useEffect, useState } from "react";
 import {
-  forgetRememberedCharacterPath,
-  getRememberedCharacterPath,
-} from "@/lib/editor-route";
+  deletePreset,
+  PresetModel,
+} from "@/hooks/use-preset";
+import { Link, useNavigate } from "react-router";
+
 
 interface CharacterListProps {
   presets: PresetModel[];
@@ -48,34 +39,37 @@ export function CharacterList({
   presets: initialCharacters,
   searchQuery,
 }: CharacterListProps) {
+  const [characters, setCharacters] = useState([] as PresetModel[]);
   const [sortKey, setSortKey] = useState<SortKey>("name");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const [openAlert, setOpenAlert] = useState(false);
   const [selectedCharacterId, setSelectedCharacterId] = useState<string | null>(
     null,
   );
-  const [uploadPreset, setUploadPreset] = useState<PresetModel | null>(null);
-  const [uploadOpen, setUploadOpen] = useState(false);
+
   const navigate = useNavigate();
-
-  const characters = useMemo(() => {
-    const filteredCharacters = initialCharacters.filter((character) =>
-      character.name.toLowerCase().includes(searchQuery.toLowerCase()),
-    );
-
-    return [...filteredCharacters].sort((a, b) => {
-      if (a[sortKey] < b[sortKey]) return sortOrder === "asc" ? -1 : 1;
-      if (a[sortKey] > b[sortKey]) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-  }, [initialCharacters, searchQuery, sortKey, sortOrder]);
 
   const sortCharacters = (key: SortKey) => {
     const newSortOrder =
       key === sortKey && sortOrder === "asc" ? "desc" : "asc";
     setSortKey(key);
     setSortOrder(newSortOrder);
+
+    const sortedCharacters = [...characters].sort((a, b) => {
+      if (a[key] < b[key]) return sortOrder === "asc" ? -1 : 1;
+      if (a[key] > b[key]) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    setCharacters(sortedCharacters);
   };
+
+  useEffect(() => {
+    const filteredCharacters = initialCharacters.filter((character) =>
+      character.name.toLowerCase().includes(searchQuery.toLowerCase()),
+    );
+    setCharacters(filteredCharacters);
+  }, [initialCharacters, searchQuery]);
 
   if (initialCharacters.length === 0) {
     return (
@@ -160,7 +154,7 @@ export function CharacterList({
                 )}
               </Button>
             </TableHead>
-            <TableHead className="w-[100px]">操作</TableHead>
+            <TableHead className="w-[200px] text-center">操作</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -168,7 +162,7 @@ export function CharacterList({
             <TableRow key={character.id}>
               <TableCell>
                 <Link
-                  to={getRememberedCharacterPath(character.id, character.type)}
+                  to={`/character/${character.id}`}
                   className="font-medium hover:text-primary ml-4"
                 >
                   {character.name}
@@ -184,57 +178,30 @@ export function CharacterList({
                   {new Date(character.lastModified).toLocaleString()}
                 </span>
               </TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreVerticalIcon className="h-4 w-4" />
-                        <span className="sr-only">更多操作</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          navigate(
-                            getRememberedCharacterPath(
-                              character.id,
-                              character.type,
-                            ),
-                          );
-                        }}
-                      >
-                        编辑
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={async () => {
-                          const preset = await getPreset(character.id);
-                          // TODO: toast error
-                          if (!preset) return;
-                          exportPreset(preset);
-                        }}
-                      >
-                        导出
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setUploadPreset(character);
-                          setUploadOpen(true);
-                        }}
-                      >
-                        分享
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedCharacterId(character.id);
-                          setOpenAlert(true);
-                        }}
-                        className="text-red-600 focus:text-red-600 focus:bg-red-50"
-                      >
-                        删除
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+              <TableCell className="w-[200px] text-center">
+                <div className="flex items-center justify-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => {
+                      navigate(`/character/${character.id}`);
+                    }}
+                  >
+                    编辑
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-3 text-xs text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                    onClick={() => {
+                      setSelectedCharacterId(character.id);
+                      setOpenAlert(true);
+                    }}
+                  >
+                    删除
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
@@ -260,7 +227,6 @@ export function CharacterList({
             <AlertDialogAction
               onClick={async () => {
                 await deletePreset(selectedCharacterId!);
-                forgetRememberedCharacterPath(selectedCharacterId!);
                 setOpenAlert(false);
                 setSelectedCharacterId(null);
               }}
@@ -270,18 +236,7 @@ export function CharacterList({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {uploadPreset && (
-        <UploadPresetDialog
-          preset={uploadPreset}
-          open={uploadOpen}
-          onOpenChange={(nextOpen) => {
-            setUploadOpen(nextOpen);
-            if (!nextOpen) {
-              setUploadPreset(null);
-            }
-          }}
-        />
-      )}
+
     </div>
   );
 }

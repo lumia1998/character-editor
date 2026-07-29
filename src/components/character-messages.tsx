@@ -14,8 +14,8 @@ import {
     SelectTrigger,
     SelectValue,
 } from "./ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { TemplateEditor } from "@/components/template-editor";
 
 interface CharacterMessagesFormProps {
     updatePreset?: <K extends NestedKeyOf<RawPreset>>(
@@ -44,8 +44,8 @@ export function CharacterMessagesForm({
 
     return (
         <div className="grid gap-6 sm:grid-cols-1">
-            <Card className="gap-0">
-                <CardHeader className="flex flex-row items-center justify-between">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between p-6">
                     <CardTitle>提示词列表</CardTitle>
                     <div className="space-x-2">
                         <Button
@@ -60,21 +60,18 @@ export function CharacterMessagesForm({
                                         ? prompts[prompts.length - 1]
                                         : null;
 
-                                let role: "system" | "assistant" | "user";
-                                if (lastPrompt == null) {
-                                    role = "system";
-                                } else if (lastPrompt.role === "system") {
-                                    role = "assistant";
-                                } else if (lastPrompt.role === "assistant") {
-                                    role = "user";
-                                } else {
-                                    role = "assistant";
-                                }
-
                                 updatePreset?.("prompts", [
                                     ...prompts,
                                     {
-                                        role,
+                                        role:
+                                            lastPrompt == null
+                                                ? "system"
+                                                : lastPrompt.role === "system"
+                                                ? "assistant"
+                                                : lastPrompt.role ===
+                                                  "assistant"
+                                                ? "user"
+                                                : "assistant",
                                         content: "",
                                     },
                                 ]);
@@ -110,7 +107,7 @@ export function CharacterMessagesForm({
                     )}
                 >
                     <div className="overflow-hidden">
-                        <CardContent className="space-y-4 pt-6">
+                        <CardContent className="space-y-4 p-6 pt-0">
                             {preset.prompts.map((message, index) => (
                                 <div
                                     key={index}
@@ -148,22 +145,17 @@ export function CharacterMessagesForm({
                                         </Select>
                                     </div>
                                     <div className="space-y-2 flex-grow w-full">
-                                        <Label htmlFor={`prompt-content-${index}`}>
-                                            提示词内容
-                                        </Label>
-                                        <TemplateEditor
-                                            id={`prompt-content-${index}`}
-                                            className="mt-4"
-                                            minRows={isMobile ? 12 : 5}
-                                            context="prompt"
-                                            ariaLabel={`第 ${index + 1} 条提示词内容`}
+                                        <Label>提示词内容</Label>
+                                        <Textarea
+                                            className="mt-4 min-h-[60px]"
+                                            rows={isMobile ? 30 : 5}
                                             value={message.content}
-                                            onChange={(value) => {
-                                                 updatePreset?.(
-                                                     `prompts.${index}.content`,
-                                                     value
-                                                 );
-                                              }}
+                                            onChange={(e) => {
+                                                updatePreset?.(
+                                                    `prompts.${index}.content`,
+                                                    e.target.value
+                                                );
+                                             }}
                                         />
                                     </div>
                                     <Button
